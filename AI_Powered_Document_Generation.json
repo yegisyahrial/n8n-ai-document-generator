@@ -1,0 +1,288 @@
+{
+  "name": "AI-Powered Document Generation",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "AI Document Generation Request",
+        "formDescription": "Please complete the details below to automatically generate a tailored Scope of Work (SOW) and Agreement document.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Client Name",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Service Type",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "AI & Workflow Automation"
+                  },
+                  {
+                    "option": "Commercial Real Estate Consulting"
+                  },
+                  {
+                    "option": "Custom Agent Development"
+                  },
+                  {
+                    "option": "CRM Integration & Management"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Contract Value (USD)",
+              "fieldType": "number",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Project Scope & Details",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Recipient Email",
+              "fieldType": "email",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        0,
+        0
+      ],
+      "id": "d2f78bb7-05a3-4e82-8218-ea92f55c4a0a",
+      "name": "On form submission",
+      "webhookId": "3ab5d9c9-16cb-4c7c-9ebf-0e569a15934e"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Please generate a formal Scope of Work and Agreement using the following client and project specifications:\n\n- Client Name: {{ $json['Client Name'] }}\n- Service Requested: {{ $json['Service Type'] }}\n- Total Contract Value: Ensure the contract value provided ({{ $json['Contract Value'] }}) is formatted as standard USD currency (e.g., $4,500.00 USD).\n- Specific Scope & Deliverables: {{ $json['Project Scope & Details'] }}\n\nEnsure the document includes the following standard sections:\n1. Project Overview & Objectives\n2. Scope of Services & Key Deliverables\n3. Financial Terms & Payment Schedule\n4. Confidentiality & Responsibilities\n5. Authorization & Acceptance Signatures Placeholder",
+        "options": {
+          "systemMessage": "You are a professional legal and corporate documentation specialist. Your task is to draft a comprehensive, highly formal Scope of Work (SOW) and Consulting Agreement based on the provided input parameters. Write in a clear, authoritative business tone. Do not include markdown codeblocks or conversational text before or after the document—output only the structured document text with clear headings and section numbers."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "5083807e-8da5-44e4-ac61-0e1dc8074940",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        208,
+        208
+      ],
+      "id": "d8893331-7890-49ba-968c-8d2babd140ad",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "yedx9ga2XPSt4Ed2",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "folderId": "1X6d_XszIeNjfcUwIS4vpOOTo1UzJ8I41",
+        "title": "=Agreement - {{ $('On form submission').item.json[\"Client Name\"] }}"
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        560,
+        0
+      ],
+      "id": "3a079349-0f3a-4380-9027-cee263957b90",
+      "name": "Create a document",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "iNI9AGeCax38NROA",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentURL": "={{ $json.id }}",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "insert",
+              "text": "={{ $('AI Agent').item.json.output }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        768,
+        0
+      ],
+      "id": "ad0c5ada-bc44-41b8-8743-9e9d2a629a1f",
+      "name": "Update a document",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "iNI9AGeCax38NROA",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('On form submission').item.json[\"Recipient Email\"] }}",
+        "subject": "=Service Agreement - {{ $('On form submission').item.json[\"Client Name\"] }}",
+        "message": "=<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    body {\n      font-family: Arial, sans-serif;\n      color: #333333;\n      line-height: 1.6;\n      margin: 0;\n      padding: 0;\n    }\n    .container {\n      max-width: 600px;\n      margin: 20px auto;\n      border: 1px solid #e0e0e0;\n      border-radius: 8px;\n      padding: 30px;\n      background-color: #ffffff;\n    }\n    .header {\n      border-bottom: 2px solid #0056b3;\n      padding-bottom: 15px;\n      margin-bottom: 20px;\n    }\n    .header h2 {\n      color: #0056b3;\n      margin: 0;\n    }\n    .content {\n      margin-bottom: 25px;\n    }\n    .button-container {\n      text-align: center;\n      margin: 30px 0;\n    }\n    .btn {\n      background-color: #0056b3;\n      color: #ffffff !important;\n      padding: 12px 25px;\n      text-decoration: none;\n      font-weight: bold;\n      border-radius: 5px;\n      display: inline-block;\n    }\n    .footer {\n      border-top: 1px solid #eeeeee;\n      padding-top: 15px;\n      font-size: 12px;\n      color: #777777;\n    }\n  </style>\n</head>\n<body>\n  <div class=\"container\">\n    <div class=\"header\">\n      <h2>Service Agreement & Scope of Work</h2>\n    </div>\n    <div class=\"content\">\n      <p>Dear <strong>{{ $('On form submission').item.json[\"Client Name\"] }}</strong>,</p>\n      <p>We are pleased to share the generated <strong>Consulting Services Agreement</strong> for your upcoming project with us.</p>\n      <p>Please review the details in the document linked below:</p>\n      \n      <div class=\"button-container\">\n        <a href=\"https://docs.google.com/document/d/{{ $('Create a document').item.json.id }}/edit\" class=\"btn\" target=\"_blank\">View Agreement Document</a>\n      </div>\n      \n      <p>If you have any questions or require modifications to the scope of work, please reply directly to this email.</p>\n    </div>\n    <div class=\"footer\">\n      <p>This is an automated notification sent by the Operations Team.<br>\n      © Orvida Real Estate Consulting, LLC. All rights reserved.</p>\n    </div>\n  </div>\n</body>\n</html>",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1184,
+        0
+      ],
+      "id": "55023b3a-5b79-4f10-9b98-d9d515b88f11",
+      "name": "Send a message",
+      "webhookId": "619ef4b7-1ba0-4708-961b-a539367069eb",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "CcZLxIKd1k3Zx0l4",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "share",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.documentId }}",
+          "mode": "id"
+        },
+        "permissionsUi": {
+          "permissionsValues": {
+            "role": "reader",
+            "type": "anyone"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        976,
+        0
+      ],
+      "id": "a4a143d8-720d-4af3-895a-c92edbe437bc",
+      "name": "Share file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "WwyOO1Fgv4M3sSPC",
+          "name": "Google Drive account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Create a document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a document": {
+      "main": [
+        [
+          {
+            "node": "Update a document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a document": {
+      "main": [
+        [
+          {
+            "node": "Share file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Share file": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "3fa0f422-f560-4ab4-ba41-86173088a2b7",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2f8cdf98bf5a32328411a90ebbcb9b5f462c1fad1f4fe233e3628757841b4196"
+  },
+  "nodeGroups": [],
+  "id": "29RbtEl4tAYkTz6I",
+  "tags": []
+}
